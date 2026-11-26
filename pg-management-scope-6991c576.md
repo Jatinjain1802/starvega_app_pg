@@ -1,6 +1,6 @@
 # PG Management App: Product Scope
 
-Source: Jatin's voice notes, Thu 26 Nov 2026 (updated after the 3:30 PM voice note). No code is started.
+Source: Jatin's voice notes, Thu 26 Nov 2026 (updated after the 3:30 PM voice note and subsequent implementation decisions). Implementation has started.
 
 Labels used below:
 - **[Your requirement]** you said it in the voice note
@@ -12,8 +12,7 @@ Labels used below:
 
 An app for Bengaluru PGs with three levels of access: owner, manager and resident. Each role sees only what belongs to them. Rent, complaints, announcements and expenses live in one place.
 
-**[Your requirement]** Three separate applications: one for owners, one for managers, one for residents.
-**[Open]** Three real apps, or one app with three role views? I have not changed your choice. See Open decisions.
+**[Updated decision]** One React Native CLI application with role-based owner, manager and resident screens, backed by one Node.js API and PostgreSQL.
 
 ## 2. Who sees what
 
@@ -130,11 +129,10 @@ These are not in v1 unless you say so.
 
 ## 7. Open decisions
 
-1. **Three apps or one?** You said three separate applications. Three real apps, or one app with three role views?
-2. **Gateway and notifications details.** Which payment gateway, and which UPI/card options? Do notifications show only inside the app, or also as phone push or WhatsApp messages?
-3. **Reopen a complaint.** Only the person who raised it, any resident, or must the resident confirm before it counts as solved?
-4. **Complaint names.** Do other residents see who raised a common complaint?
-5. **Manager limit.** You said typically 2 to 3 PGs. Should the app enforce a limit, or is that just a typical case?
-6. **Accounts.** Owner adds managers and manager adds residents, or residents sign up and get approved?
-7. **Rent rules.** Per bed or per room? Due date, late fee, deposit, food included or not?
-8. **First user.** One real PG as a pilot, or a product for many Bengaluru PG owners from day one?
+1. **Gateway and notifications details.** Which payment gateway, and which UPI/card options? Do notifications show only inside the app, or also as phone push or WhatsApp messages?
+2. **Reopen a complaint.** Only the person who raised it, any resident, or must the resident confirm before it counts as solved?
+3. **Complaint names.** Do other residents see who raised a common complaint?
+4. **Manager limit.** You said typically 2 to 3 PGs. Should the app enforce a limit, or is that just a typical case?
+5. **Accounts.** The current build uses owner/manager invitations. Should residents be able to register and request approval instead?
+6. **Rent rules.** Per bed or per room? Due date, late fee, deposit, food included or not?
+7. **First user.** One real PG as a pilot, or a product for many Bengaluru PG owners from day one?
