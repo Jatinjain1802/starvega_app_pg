@@ -2,13 +2,13 @@
   "name": "@starvega/api",
   "version": "0.1.0",
   "private": true,
-  "main": "dist/server.js",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
     "test": "vitest run src",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "node src/db/migrate.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -21,13 +21,6 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.10.0",
-    "@types/pg": "^8.15.5",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
     "vitest": "^4.0.14"
   }
 }

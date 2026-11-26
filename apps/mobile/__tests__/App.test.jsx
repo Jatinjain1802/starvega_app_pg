@@ -11,8 +11,10 @@ jest.mock(
   () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
-test('renders correctly', async () => {
+test('renders the app root', async () => {
+  let renderer;
   await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<App />);
+    renderer = ReactTestRenderer.create(<App />);
   });
+  expect(renderer.toJSON()).not.toBeNull();
 });

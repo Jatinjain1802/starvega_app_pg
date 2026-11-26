@@ -12,37 +12,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { API_URL } from './src/config';
+import { API_URL } from './src/config.js';
 
 const TOKEN_KEY = 'starvega.auth.token';
 
-type Membership = {
-  propertyId: string;
-  propertyName: string;
-  role: 'OWNER' | 'MANAGER' | 'RESIDENT';
-  monthlyRentCents: number | null;
-};
-
-type Profile = {
-  id: string;
-  name: string;
-  phone: string;
-  memberships: Membership[];
-};
-
-type RentDue = {
-  id: string;
-  month: string;
-  amountCents: number;
-  paidCents: number;
-  dueDate: string;
-  residentName?: string;
-};
-type AuthMode = 'login' | 'owner' | 'invitation';
-type InviteRole = 'MANAGER' | 'RESIDENT';
-type CreatedInvitation = { token: string; phone: string; role: InviteRole };
-
-async function request<T>(path: string, token?: string, body?: unknown): Promise<T> {
+async function request(path, token, body) {
   const response = await fetch(`${API_URL}${path}`, {
     method: body === undefined ? 'GET' : 'POST',
     headers: {
@@ -55,10 +29,10 @@ async function request<T>(path: string, token?: string, body?: unknown): Promise
   if (!response.ok) {
     throw new Error(payload.error ?? 'The request could not be completed');
   }
-  return payload as T;
+  return payload;
 }
 
-function formatRupees(amountCents: number): string {
+function formatRupees(amountCents) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -75,11 +49,11 @@ export default function App() {
 }
 
 function AppContent() {
-  const [token, setToken] = useState<string>();
-  const [profile, setProfile] = useState<Profile>();
-  const [dues, setDues] = useState<RentDue[]>([]);
-  const [selectedMembership, setSelectedMembership] = useState<Membership>();
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [token, setToken] = useState();
+  const [profile, setProfile] = useState();
+  const [dues, setDues] = useState([]);
+  const [selectedMembership, setSelectedMembership] = useState();
+  const [authMode, setAuthMode] = useState('login');
   const [name, setName] = useState('');
   const [invitationToken, setInvitationToken] = useState('');
   const [phone, setPhone] = useState('');
@@ -89,8 +63,8 @@ function AppContent() {
   const [dueDate, setDueDate] = useState('');
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteRent, setInviteRent] = useState('');
-  const [inviteRole, setInviteRole] = useState<InviteRole>('RESIDENT');
-  const [createdInvitation, setCreatedInvitation] = useState<CreatedInvitation>();
+  const [inviteRole, setInviteRole] = useState('RESIDENT');
+  const [createdInvitation, setCreatedInvitation] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -99,9 +73,9 @@ function AppContent() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }, []);
 
-  const loadProfile = useCallback(async (authToken: string): Promise<void> => {
+  const loadProfile = useCallback(async (authToken) => {
     try {
-      const nextProfile = await request<Profile>('/auth/me', authToken);
+      const nextProfile = await request('/auth/me', authToken);
       setProfile(nextProfile);
       setSelectedMembership(nextProfile.memberships[0]);
     } catch (requestError) {
@@ -111,14 +85,14 @@ function AppContent() {
     }
   }, []);
 
-  const loadDues = useCallback(async (authToken: string, membership: Membership): Promise<void> => {
+  const loadDues = useCallback(async (authToken, membership) => {
     setLoading(true);
     setError('');
     try {
       const path = membership.role === 'RESIDENT'
         ? '/rent-dues/me'
         : `/properties/${membership.propertyId}/rent-dues?month=${currentMonth}`;
-      const result = await request<{ rentDues: RentDue[] }>(path, authToken);
+      const result = await request(path, authToken);
       setDues(result.rentDues);
     } catch (requestError) {
       setError(messageOf(requestError));
@@ -146,12 +120,12 @@ function AppContent() {
     if (token && selectedMembership) loadDues(token, selectedMembership);
   }, [token, selectedMembership, loadDues]);
 
-  async function submitAuth(): Promise<void> {
+  async function submitAuth() {
     setLoading(true);
     setError('');
     try {
       const result = authMode === 'owner'
-        ? await request<{ token: string }>('/auth/register-owner', undefined, {
+        ? await request('/auth/register-owner', undefined, {
             name,
             phone,
             password,
@@ -159,12 +133,12 @@ function AppContent() {
             address,
           })
         : authMode === 'invitation'
-          ? await request<{ token: string }>('/auth/accept-invitation', undefined, {
+          ? await request('/auth/accept-invitation', undefined, {
               token: invitationToken,
               name,
               password,
             })
-          : await request<{ token: string }>('/auth/login', undefined, { phone, password });
+          : await request('/auth/login', undefined, { phone, password });
       await AsyncStorage.setItem(TOKEN_KEY, result.token);
       setToken(result.token);
       await loadProfile(result.token);
@@ -175,7 +149,7 @@ function AppContent() {
     }
   }
 
-  async function generateDues(): Promise<void> {
+  async function generateDues() {
     if (!token || !selectedMembership || !dueDate) {
       setError('Enter the rent due date before generating monthly dues.');
       return;
@@ -196,7 +170,7 @@ function AppContent() {
     }
   }
 
-  async function createInvitation(): Promise<void> {
+  async function createInvitation() {
     if (!token || !selectedMembership) return;
     const monthlyRentCents = inviteRole === 'RESIDENT' ? rupeesToPaise(inviteRent) : undefined;
     if (inviteRole === 'RESIDENT' && monthlyRentCents === undefined) {
@@ -208,7 +182,7 @@ function AppContent() {
     setError('');
     setCreatedInvitation(undefined);
     try {
-      const invitation = await request<{ token: string }>(
+      const invitation = await request(
         `/properties/${selectedMembership.propertyId}/invitations`,
         token,
         {
@@ -227,14 +201,14 @@ function AppContent() {
     }
   }
 
-  async function shareInvitation(): Promise<void> {
+  async function shareInvitation() {
     if (!createdInvitation) return;
     await Share.share({
       message: `You've been invited to join ${selectedMembership?.propertyName} on Starvega as a ${createdInvitation.role.toLowerCase()}. Use this invitation token in the Starvega app: ${createdInvitation.token}`,
     });
   }
 
-  async function signOut(): Promise<void> {
+  async function signOut() {
     await AsyncStorage.removeItem(TOKEN_KEY);
     setToken(undefined);
     setProfile(undefined);
@@ -369,7 +343,7 @@ function AppContent() {
           <View style={styles.generateCard}>
             <Text style={styles.sectionTitle}>Invite someone to this PG</Text>
             <View style={styles.roleOptions}>
-              {(['RESIDENT', ...(selectedMembership.role === 'OWNER' ? ['MANAGER'] : [])] as InviteRole[]).map((role) => (
+              {(selectedMembership.role === 'OWNER' ? ['RESIDENT', 'MANAGER'] : ['RESIDENT']).map((role) => (
                 <Pressable
                   key={role}
                   style={[styles.roleOption, inviteRole === role && styles.roleOptionSelected]}
@@ -427,7 +401,7 @@ function AppContent() {
   );
 }
 
-function Field(props: React.ComponentProps<typeof TextInput> & { label: string }) {
+function Field(props) {
   const { label, ...inputProps } = props;
   return (
     <View style={styles.field}>
@@ -437,7 +411,7 @@ function Field(props: React.ComponentProps<typeof TextInput> & { label: string }
   );
 }
 
-function PrimaryButton({ title, onPress, disabled }: { title: string; onPress: () => void; disabled?: boolean }) {
+function PrimaryButton({ title, onPress, disabled }) {
   return (
     <Pressable onPress={onPress} disabled={disabled} style={[styles.button, disabled && styles.buttonDisabled]}>
       <Text style={styles.buttonText}>{title}</Text>
@@ -445,7 +419,7 @@ function PrimaryButton({ title, onPress, disabled }: { title: string; onPress: (
   );
 }
 
-function messageOf(error: unknown): string {
+function messageOf(error) {
   return error instanceof Error ? error.message : 'Something went wrong.';
 }
 
@@ -492,7 +466,7 @@ const styles = StyleSheet.create({
   notice: { color: '#65736e', backgroundColor: '#eaf2ee', borderRadius: 12, padding: 14, lineHeight: 20, marginTop: 14 },
 });
 
-function rupeesToPaise(value: string): number | undefined {
+function rupeesToPaise(value) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value.trim());
   if (!match) return undefined;
   const paise = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));

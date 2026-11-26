@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "api:dev": "npm run dev -w @starvega/api",
-    "api:build": "npm run build -w @starvega/api",
+    "api:start": "npm run start -w @starvega/api",
     "api:test": "npm test -w @starvega/api",
     "mobile:start": "npm run start -w StarvegaMobile",
     "mobile:ios": "npm run ios -w StarvegaMobile",
